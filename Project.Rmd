@@ -1,0 +1,80 @@
+---
+output: pdf_document
+---
+Regression Models Course Project
+================================
+#Executive Summary
+
+You work for Motor Trend, a magazine about the automobile industry. Looking at a data set of a collection of cars, they are interested in exploring the relationship between a set of variables and miles per gallon (MPG) (outcome). They are particularly interested in the following two questions:
+
+- "Is an automatic or manual transmission better for MPG"
+- "Quantify the MPG difference between automatic and manual transmissions"
+
+#Data Loading and processing
+
+I load the dataset and run some summary statistics on dataset.
+```{r}
+library(datasets)
+data(mtcars)
+head(mtcars)
+summary(mtcars)
+```
+# 1. Is an automatic or manual transmission better for MPG?
+
+I transform the "am" variable to factro variable with two levels of "Automatic" and "Manual".
+```{r}
+mtcars$am<-factor(mtcars$am, labels=c('Automatic', 'Manual'))
+```
+
+The boxplot of MPG by transmission types (Appendix 2) shows that manual cars are better im miles per gallon than the automatic cars. Manual cars use one gallon of gas per 22.8 miles, while automatic cars use one gallon of gas for every 17.3 miles. 
+```{r}
+median(mtcars$mpg[mtcars$am=="Manual"])
+median(mtcars$mpg[mtcars$am=="Automatic"])
+```
+
+The "t-test"" tests the hypothesis that if the true difference in means of automatic and manual cars are equal to zero or not. 
+```{r}
+t.test(mtcars$mpg~mtcars$am)
+```
+
+The p-value of 0.001374 is less than 0.05 and I reject the null hypothesis that the true difference in means is equal to 0 (mean of atomatic cars is different than the manual cars). Based on the sample estimates of mean in cars, we can conclude that mannual cars are better in MPG than the automatic cars, with all other conditions constant. 
+
+#2. Quantify the MPG difference between automatic and manual transmissions
+
+In this part, I quantify the MPG difference between automatic and manual transmissions, and find out if other variables also explain the MPG differences or not. 
+```{r}
+fit<-lm(mpg~., data=mtcars)
+summary(fit)$coef
+```
+
+The only significant coefficient in multivariate linear regression is weight. Including all varaibles in the model overfit the results. Then, I use the step function (automatic variable selection). The following model chooses the best linear regression models.
+```{r, results='hide'}
+bestfit<-step(lm(mpg~., data=mtcars))
+```
+```{r}
+summary(bestfit)
+```
+
+The results show that the best model includes wt, qsec, and amManual variables. All the coefficients except intercept are statistically significant and different than 0 (overall p-value<0.01). The model explains 84.97% of the variance.  
+For every lb/1000 increase in weight of car, mpg decreases about 4. For every quarter mile time the mpg increases by 1.2. The manual cars are 2.9 mpg better than automatic cars. The residual plots scattered randomly (Appendix 2).
+
+#Conclusion
+
+Manual transmission cars are better in mpg than the automatic cars by 2.93 mpg. The other important factors beside the transmission types are weight, and quarter mile time.  
+
+Appendix
+========
+
+Appendix 1
+```{r}
+boxplot(mtcars$mpg ~ mtcars$am, data=mtcars, col="orange",
+        xlab="Transmission", 
+        ylab="MPG", 
+        main="MPG by Transmisson")
+```
+
+Appendix 2
+```{r fig.height=7}
+par(mfrow=c(2,2))
+plot(bestfit)
+```
